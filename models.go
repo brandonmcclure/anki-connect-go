@@ -1,12 +1,5 @@
 package anki
 
-import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"net/http"
-)
-
 type (
 	// ModelInput represents a model input.
 	ModelInput struct {
@@ -25,22 +18,13 @@ type (
 )
 
 // Models returns the list of model names for the current user.
-func (c *Client) Models(ctx context.Context) ([]string, error) {
-	request := ankiRequest{Action: "modelNames", Version: c.minVersion}
-	body, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", c.url, bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-
-	req = req.WithContext(ctx)
-
+func (c *Client) Models() ([]string, error) {
 	var res []string
-	if err := c.sendRequest(req, &res); err != nil {
+	if err := c.sendRequest(
+		ankiRequest{
+			Action:  "modelNames",
+			Version: c.minVersion,
+		}, &res); err != nil {
 		return nil, err
 	}
 
@@ -48,28 +32,16 @@ func (c *Client) Models(ctx context.Context) ([]string, error) {
 }
 
 // Gets the complete list of field names for the provided model name.
-func (c *Client) ModelFieldNames(ctx context.Context, modelName string) ([]string, error) {
-	request := ankiRequest{
-		Action:  "modelFieldNames",
-		Version: c.minVersion,
-		Params: map[string]interface{}{
-			"modelName": modelName,
-		},
-	}
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", c.url, bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-
-	req = req.WithContext(ctx)
+func (c *Client) ModelFieldNames(modelName string) ([]string, error) {
 	var res []string
-	if err := c.sendRequest(req, &res); err != nil {
+	if err := c.sendRequest(
+		ankiRequest{
+			Action:  "modelFieldNames",
+			Version: c.minVersion,
+			Params: map[string]interface{}{
+				"modelName": modelName,
+			},
+		}, &res); err != nil {
 		return nil, err
 	}
 
@@ -77,25 +49,14 @@ func (c *Client) ModelFieldNames(ctx context.Context, modelName string) ([]strin
 }
 
 // CreateModel creates a new model.
-func (c *Client) CreateModel(ctx context.Context, model ModelInput) error {
-	request := createModelRequest{
-		ankiRequest: ankiRequest{Action: "createModel", Version: c.minVersion},
-		Params:      model,
-	}
-	body, err := json.Marshal(request)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("POST", c.url, bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-
-	req = req.WithContext(ctx)
-
+func (c *Client) CreateModel(model ModelInput) error {
 	var res interface{}
-	if err := c.sendRequest(req, &res); err != nil {
+	if err := c.sendRequest(
+		ankiRequest{
+			Action:  "createModel",
+			Version: c.minVersion,
+			Params:  model,
+		}, &res); err != nil {
 		return err
 	}
 

@@ -1,29 +1,13 @@
 package anki
 
-import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"net/http"
-)
-
 // Decks gets the complete list of deck names for the current user.
-func (c *Client) Decks(ctx context.Context) ([]string, error) {
-	request := ankiRequest{Action: "deckNames", Version: c.minVersion}
-	body, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", c.url, bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-
-	req = req.WithContext(ctx)
-
+func (c *Client) DeckNames() ([]string, error) {
 	var res []string
-	if err := c.sendRequest(req, &res); err != nil {
+	if err := c.sendRequest(
+		ankiRequest{
+			Action:  "deckNames",
+			Version: c.minVersion,
+		}, &res); err != nil {
 		return nil, err
 	}
 
@@ -32,25 +16,16 @@ func (c *Client) Decks(ctx context.Context) ([]string, error) {
 
 // CreateDeck creates a new empty deck.
 // Will not overwrite a deck that exists with the same name.
-func (c *Client) CreateDeck(ctx context.Context, name string) (int, error) {
-	request := createDeckRequest{
-		ankiRequest: ankiRequest{Action: "createDeck", Version: c.minVersion},
-		Params:      createDeckParams{Deck: name},
-	}
-	body, err := json.Marshal(request)
-	if err != nil {
-		return 0, err
-	}
-
-	req, err := http.NewRequest("POST", c.url, bytes.NewReader(body))
-	if err != nil {
-		return 0, err
-	}
-
-	req = req.WithContext(ctx)
-
+func (c *Client) CreateDeck(name string) (int, error) {
 	var res int
-	if err := c.sendRequest(req, &res); err != nil {
+	if err := c.sendRequest(
+		ankiRequest{
+			Action:  "createDeck",
+			Version: c.minVersion,
+			Params: map[string]interface{}{
+				"deck": name,
+			},
+		}, &res); err != nil {
 		return 0, nil
 	}
 
@@ -58,47 +33,19 @@ func (c *Client) CreateDeck(ctx context.Context, name string) (int, error) {
 }
 
 // DeleteDecks deletes decks with the given names.
-func (c *Client) DeleteDecks(ctx context.Context, names []string) error {
-	// TODO: cards too option?
-	request := deleteDecksRequest{
-		ankiRequest: ankiRequest{Action: "deleteDecks", Version: c.minVersion},
-		Params:      deleteDecksParams{Decks: names},
-	}
-	body, err := json.Marshal(request)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("POST", c.url, bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-
-	req = req.WithContext(ctx)
-
+func (c *Client) DeleteDecks(names []string) error {
 	var res interface{}
-	if err := c.sendRequest(req, &res); err != nil {
+	if err := c.sendRequest(
+		ankiRequest{
+			Action:  "deleteDecks",
+			Version: c.minVersion,
+			Params: map[string]interface{}{
+				"decks":    names,
+				"cardsToo": true,
+			},
+		}, &res); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-type createDeckParams struct {
-	Deck string `json:"deck"`
-}
-
-type createDeckRequest struct {
-	ankiRequest
-	Params createDeckParams `json:"params"`
-}
-
-type deleteDecksParams struct {
-	Decks    []string `json:"decks"`
-	CardsToo bool     `json:"cardsToo"`
-}
-
-type deleteDecksRequest struct {
-	ankiRequest
-	Params deleteDecksParams `json:"params"`
 }
