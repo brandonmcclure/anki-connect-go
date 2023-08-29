@@ -1,3 +1,3 @@
-module github.com/leonhfr/anki-connect-go
+module github.com/brandonmcclure/anki-connect-go
 
 go 1.17

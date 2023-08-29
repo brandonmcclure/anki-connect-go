@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/leonhfr/anki-connect-go"
+	"github.com/brandonmcclure/anki-connect-go"
 )
 
 func main() {
